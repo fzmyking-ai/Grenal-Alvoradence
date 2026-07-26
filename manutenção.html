@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Em Manutenção</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --text-color: #e1e1e1;
+            --text-muted: #888888;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            background-color: var(--surface-color);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Container do Rostinho com Animação de Flutuar */
+        .face-box {
+            margin-bottom: 30px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(-2deg); }
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 0 10px;
+        }
+
+        /* Botão de Voltar Estilizado */
+        .btn-back {
+            background-color: var(--secondary-color);
+            color: #121212;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(3, 218, 198, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.1s, box-shadow 0.2s, background-color 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background-color: #02bfae;
+            box-shadow: 0 6px 20px rgba(3, 218, 198, 0.4);
+        }
+
+        .btn-back:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="face-box">
+            <svg width="140" height="140" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="56" r="38" fill="#252525" stroke="var(--primary-color)" stroke-width="3.5" />
+                
+                <path d="M 23 66 L 31 64 M 25 70 L 30 68" stroke="#5d4037" stroke-width="2.5" stroke-linecap="round" opacity="0.7" />
+
+                <path d="M 33 50 Q 38 48 43 51" stroke="var(--text-color)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+                <path d="M 57 51 Q 62 48 67 50" stroke="var(--text-color)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+                
+                <circle cx="38" cy="56" r="2.5" fill="var(--text-color)" />
+                <circle cx="62" cy="56" r="2.5" fill="var(--text-color)" />
+
+                <circle cx="28" cy="64" r="5" fill="#ff79c6" opacity="0.25" />
+                <circle cx="72" cy="64" r="5" fill="#ff79c6" opacity="0.25" />
+                
+                <path d="M 73 49 Q 70 54 73 57 Q 76 54 73 49" fill="#03dac6" opacity="0.9" />
+
+                <path d="M 43 69 Q 50 75 57 69" stroke="var(--text-color)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+                
+                <path d="M 46 22 Q 50 6 54 22 Z" fill="#E6A100" />
+                <path d="M 21 42 A 29 29 0 0 1 79 42 Z" fill="#FFC107" />
+                <path d="M 13 42 Q 50 48 87 42 Q 50 36 13 42" fill="#E6A100" />
+            </svg>
+        </div>
+
+        <h1>Página em Manutenção</h1>
+        <p>Estamos fazendo alguns ajustes técnicos para deixar sua experiência ainda melhor. Voltamos num piscar de olhos! 🛠️</p>
+        
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar para o App
+        </a>
+    </div>
+
+</body>
+</html>
+

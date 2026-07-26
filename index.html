@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glow Up - Seleção de Equipa</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --surface-color: #11131a;
+            --card-bg: #181b26;
+            --blue-glow: #0066ff;
+            --pink-glow: #ff007f;
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --border-radius: 22px;
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .selection-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 26px 22px;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, border-color 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card:active {
+            transform: scale(0.96);
+        }
+
+        /* Cartão Masculino */
+        .card-masculino {
+            border-left: 6px solid var(--blue-glow);
+        }
+
+        .card-masculino:hover, .card-masculino:focus {
+            box-shadow: 0 0 25px rgba(0, 102, 255, 0.35);
+            border-color: rgba(0, 102, 255, 0.4);
+        }
+
+        .card-masculino .icon-box {
+            background: rgba(0, 102, 255, 0.12);
+            color: var(--blue-glow);
+            border: 1px solid rgba(0, 102, 255, 0.25);
+        }
+
+        /* Cartão Feminino */
+        .card-feminino {
+            border-left: 6px solid var(--pink-glow);
+        }
+
+        .card-feminino:hover, .card-feminino:focus {
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.35);
+            border-color: rgba(255, 0, 127, 0.4);
+        }
+
+        .card-feminino .icon-box {
+            background: rgba(255, 0, 127, 0.12);
+            color: var(--pink-glow);
+            border: 1px solid rgba(255, 0, 127, 0.25);
+        }
+
+        .info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-align: left;
+        }
+
+        .icon-box {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            flex-shrink: 0;
+        }
+
+        .team-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .team-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .arrow-icon {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.25);
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .team-card:hover .arrow-icon {
+            transform: translateX(4px);
+            color: var(--text-main);
+        }
+
+        footer {
+            margin-top: 50px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>App Treinador</h1>
+            <p>Selecione a equipa para gerir os treinos</p>
+        </div>
+
+        <div class="selection-grid">
+            <a href="masculino.html" class="team-card card-masculino">
+                <div class="info-wrapper">
+                    <div class="icon-box">
+                        <i class="fas fa-mars"></i>
+                    </div>
+                    <div>
+                        <div class="team-title">Equipa Masculina</div>
+                        <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right arrow-icon"></i>
+            </a>
+
+            <a href="feminino.html" class="team-card card-feminino">
+                <div class="info-wrapper">
+                    <div class="icon-box">
+                        <i class="fas fa-venus"></i>
+                    </div>
+                    <div>
+                        <div class="team-title">Equipa Feminina</div>
+                        <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right arrow-icon"></i>
+            </a>
+        </div>
+
+        <footer>
+            Glow Up Edition &bull; Gestão Desportiva
+        </footer>
+    </div>
+
+</body>
+</html>
