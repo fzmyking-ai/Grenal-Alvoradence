@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Treinador - Seleção de Equipa</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --surface-color: #11131a;
+            --card-bg: #181b26;
+            --blue-glow: #0066ff;
+            --red-glow: #ff2a2a;
+            --pink-glow: #ff007f;
+            --purple-glow: #8A2BE2;
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --border-radius: 22px;
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0 10px;
+        }
+
+        /* ----- ESTILOS DE AUTENTICAÇÃO E MASCOTE ----- */
+        .face-box {
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        /* Configurações de Género do Mascote */
+        #face-container[data-gender="male"] {
+            --mascot-primary: var(--blue-glow);
+            --mascot-secondary: var(--red-glow);
+        }
+        
+        #face-container[data-gender="female"] {
+            --mascot-primary: var(--pink-glow);
+            --mascot-secondary: var(--purple-glow);
+        }
+
+        #ponytail, #eyelashes { display: none; }
+        #face-container[data-gender="female"] #ponytail,
+        #face-container[data-gender="female"] #eyelashes { display: block; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Animação ao acordar (Chaqualada na cabeça) */
+        @keyframes wakeUpShake {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(-10deg) translateX(-5px); }
+            40% { transform: rotate(10deg) translateX(5px); }
+            60% { transform: rotate(-6deg) translateX(-3px); }
+            80% { transform: rotate(6deg) translateX(3px); }
+            100% { transform: rotate(0deg) translateX(0); }
+        }
+
+        .waking-up {
+            animation: wakeUpShake 0.4s ease-out !important;
+        }
+
+        /* Olhada para o lado ao focar nos inputs */
+        #face-elements {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: 50px 50px;
+        }
+
+        .looking-away #face-elements {
+            transform: translateX(12px) translateY(-4px) rotate(8deg);
+        }
+
+        /* Animação de Piscar os Óculos normais */
+        @keyframes blink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            96% { transform: scaleY(0.1); }
+        }
+
+        .glasses-group {
+            transform-origin: 50px 50px;
+            animation: blink 4s infinite;
+            transition: opacity 0.3s ease;
+        }
+
+        .closed-eyes {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Troca os óculos por olhos fechados fofos quando boceja/dorme */
+        .yawning .glasses-group, .sleeping .glasses-group {
+            opacity: 0;
+            animation: none;
+        }
+
+        .yawning .closed-eyes, .sleeping .closed-eyes {
+            opacity: 1;
+        }
+
+        /* Estilo e Animação do zZz ao Dormir */
+        #zzz-group {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .sleeping #zzz-group {
+            opacity: 1;
+        }
+
+        .zzz { opacity: 0; }
+        .sleeping .zzz1 { animation: floatZ 2.4s infinite ease-in-out 0s; }
+        .sleeping .zzz2 { animation: floatZ 2.4s infinite ease-in-out 0.8s; }
+        .sleeping .zzz3 { animation: floatZ 2.4s infinite ease-in-out 1.6s; }
+
+        @keyframes floatZ {
+            0% { opacity: 0; transform: translateY(4px) scale(0.6); }
+            40% { opacity: 1; }
+            80%, 100% { opacity: 0; transform: translateY(-18px) scale(1.1); }
+        }
+
+        /* Animação da Baba */
+        .drool {
+            opacity: 0;
+            transform-origin: 56px 70px;
+            transition: opacity 0.3s;
+        }
+
+        .sleeping .drool {
+            opacity: 0.8;
+            animation: droolPulse 3s infinite ease-in-out;
+        }
+
+        @keyframes droolPulse {
+            0%, 100% { transform: scale(0.6) translateY(0); opacity: 0.6; }
+            50% { transform: scale(1.2) translateY(2px); opacity: 0.9; }
+        }
+
+        #mouth {
+            transition: d 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
+        }
+
+        /* Componentes de Interface */
+        .auth-container {
+            background-color: var(--surface-color);
+            padding: 30px 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: cardAppear 0.5s ease-out forwards;
+        }
+
+        .input-glow {
+            width: 100%;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            -webkit-text-security: disk;
+        }
+
+        .input-glow:focus {
+            border-color: var(--blue-glow);
+            box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .btn-glow {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--blue-glow), #0044cc);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .btn-glow:active { transform: scale(0.96); }
+
+        .reset-link {
+            display: inline-block;
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .reset-link:hover { color: var(--red-glow); }
+
+        /* Estilos Seleção Equipa */
+        .selection-grid { display: flex; flex-direction: column; gap: 20px; }
+        .team-card {
+            background: var(--card-bg); border-radius: var(--border-radius); padding: 26px 22px;
+            text-decoration: none; color: var(--text-main); display: flex; align-items: center;
+            justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; text-align: left;
+        }
+        .team-card:active { transform: scale(0.96); }
+        .card-masculino { border-left: 6px solid var(--blue-glow); }
+        .card-masculino:hover { box-shadow: 0 0 25px rgba(0, 102, 255, 0.35); border-color: rgba(0, 102, 255, 0.4); }
+        .card-masculino .icon-box { background: rgba(0, 102, 255, 0.12); color: var(--blue-glow); border: 1px solid rgba(0, 102, 255, 0.25); }
+        
+        .card-feminino { border-left: 6px solid var(--pink-glow); }
+        .card-feminino:hover { box-shadow: 0 0 25px rgba(255, 0, 127, 0.35); border-color: rgba(255, 0, 127, 0.4); }
+        .card-feminino .icon-box { background: rgba(255, 0, 127, 0.12); color: var(--pink-glow); border: 1px solid rgba(255, 0, 127, 0.25); }
+        
+        .info-wrapper { display: flex; align-items: center; gap: 18px; }
+        .icon-box { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; flex-shrink: 0; }
+        .team-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .team-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+        .arrow-icon { font-size: 1.1rem; color: rgba(255, 255, 255, 0.25); transition: transform 0.2s, color 0.2s; }
+        .team-card:hover .arrow-icon { transform: translateX(4px); color: var(--text-main); }
+        
+        footer { margin-top: 50px; font-size: 0.85rem; color: var(--text-muted); opacity: 0.5; font-weight: 600;}
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Estilo Customizado para SweetAlert */
+        .swal2-popup { background: var(--surface-color) !important; color: #fff !important; border-radius: 20px !important; border: 1px solid rgba(255,255,255,0.1) !important;}
+        .swal2-title { color: #fff !important; }
+        .swal2-input { background: var(--card-bg) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px !important; }
+        .swal2-input:focus { border-color: var(--blue-glow) !important; box-shadow: 0 0 10px rgba(0,102,255,0.3) !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="auth-screen" class="auth-container" style="display: none;">
+            <div class="face-box" id="face-container" data-gender="male">
+                <svg width="140" height="140" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path id="ponytail" d="M 15 45 Q -10 65 5 90 Q 20 70 25 50 Z" fill="#3a2115" opacity="0.95"/>
+                    
+                    <circle cx="50" cy="56" r="36" fill="#181b26" stroke="#ffffff" stroke-width="2" opacity="0.3" />
+                    
+                    <path d="M 14 40 C 14 -5, 86 -5, 86 40 Z" fill="var(--mascot-primary)" />
+
+                    <g id="face-elements">
+                        <path d="M 5 40 L 80 40" stroke="var(--mascot-secondary)" stroke-width="6" stroke-linecap="round" />
+                        <circle cx="50" cy="12" r="3.5" fill="var(--mascot-secondary)" />
+
+                        <g class="glasses-group">
+                            <rect x="23" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                            <rect x="54" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                            <path d="M 45 48 L 55 48" stroke="#ffffff" stroke-width="3.5" />
+                            
+                            <g id="eyelashes">
+                                <path d="M 25 44 L 20 38" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 35 44 L 33 36" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 65 44 L 67 36" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 75 44 L 80 38" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                            </g>
+
+                            <path d="M 26 46 L 42 55" stroke="var(--mascot-primary)" stroke-width="2.5" opacity="0.85" />
+                            <path d="M 57 46 L 73 55" stroke="var(--mascot-primary)" stroke-width="2.5" opacity="0.85" />
+                        </g>
+
+                        <g class="closed-eyes">
+                            <path d="M 26 50 Q 34 56 42 50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+                            <path d="M 58 50 Q 66 56 74 50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+                        </g>
+
+                        <path id="mouth" d="M 40 70 Q 50 77 60 70" stroke="var(--text-muted)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+                        <path class="drool" d="M 54 71 C 58 71, 60 80, 56 84 C 52 80, 52 71, 54 71 Z" fill="#cce5ff" />
+
+                        <g id="zzz-group">
+                            <text class="zzz zzz1" x="66" y="38" fill="var(--text-muted)" font-size="11" font-weight="800">z</text>
+                            <text class="zzz zzz2" x="74" y="27" fill="var(--text-muted)" font-size="14" font-weight="800">Z</text>
+                            <text class="zzz zzz3" x="84" y="14" fill="var(--text-muted)" font-size="17" font-weight="800">Z</text>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="header" style="margin-bottom: 25px;">
+                <h1 id="auth-title">Olá, Treinador!</h1>
+                <p id="auth-subtitle">Por medida de segurança, crie uma senha que usará para entrar novamente.</p>
+            </div>
+
+            <div id="setup-area">
+                <input type="text" id="new-pin" placeholder="Digite uma senha" class="input-glow pass-input" autocomplete="off" spellcheck="false">
+                <input type="text" id="confirm-pin" placeholder="Confirme a senha" class="input-glow pass-input" autocomplete="off" spellcheck="false">
+                <button class="btn-glow" onclick="criarSenha()"><i class="fas fa-lock"></i> Guardar Senha</button>
+            </div>
+
+            <div id="login-area" style="display: none;">
+                <input type="text" id="login-pin" placeholder="A sua senha secreta" class="input-glow pass-input" autocomplete="off" spellcheck="false">
+                <button class="btn-glow" onclick="fazerLogin()"><i class="fas fa-sign-in-alt"></i> Entrar na App</button>
+                <div class="reset-link" onclick="resetarSenha()"><i class="fas fa-undo"></i> Resetar Senha</div>
+            </div>
+        </div>
+
+        <div id="menu-screen" style="display: none; animation: cardAppear 0.5s ease-out forwards;">
+            <div class="header">
+                <h1>App Treinador</h1>
+                <p>Selecione a equipa para gerir os treinos</p>
+            </div>
+
+            <div class="selection-grid">
+                <a href="masculino.html" class="team-card card-masculino" onclick="playSound('click')">
+                    <div class="info-wrapper">
+                        <div class="icon-box"><i class="fas fa-mars"></i></div>
+                        <div>
+                            <div class="team-title">Equipa Masculina</div>
+                            <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </a>
+
+                <a href="feminino.html" class="team-card card-feminino" onclick="playSound('click')">
+                    <div class="info-wrapper">
+                        <div class="icon-box"><i class="fas fa-venus"></i></div>
+                        <div>
+                            <div class="team-title">Equipa Feminina</div>
+                            <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            Gestão Desportiva
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================================
+        // MOTOR DE SOM (Partilhado)
+        // ==========================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        document.body.addEventListener('click', () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            if (type === 'click') {
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(800, now); 
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); 
+                osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(523.25, now); 
+                osc.frequency.setValueAtTime(659.25, now + 0.1); 
+                gain.gain.setValueAtTime(0, now); 
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.05); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); 
+                osc.stop(now + 0.3);
+            } else if (type === 'delete') {
+                osc.type = 'sawtooth'; 
+                osc.frequency.setValueAtTime(150, now); 
+                osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); 
+                osc.stop(now + 0.2);
+            } else if (type === 'toggle-on') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+            
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+        }
+
+        // ==========================================================
+        // LÓGICA PRINCIPAL DA APP
+        // ==========================================================
+        const CHAVE_SENHA = 'app_treinador_senha_secreta';
+        const CHAVE_SESSAO = 'app_treinador_sessao_ativa';
+        const faceContainer = document.getElementById('face-container');
+        const passInputs = document.querySelectorAll('.pass-input');
+        const mouth = document.getElementById('mouth');
+
+        let idleTimer = null;
+
+        // Olhar para o lado e som ao focar nos inputs
+        passInputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                playSound('click');
+                faceContainer.classList.add('looking-away');
+            });
+            input.addEventListener('blur', () => {
+                faceContainer.classList.remove('looking-away');
+            });
+        });
+
+        // --- LÓGICA DE INATIVIDADE (BOCEJO -> DORMIR -> ACORDAR) ---
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+
+            // Verifica se ele estava a dormir ou a bocejar
+            if (faceContainer.classList.contains('yawning') || faceContainer.classList.contains('sleeping')) {
+                // Remove os estados de sono
+                faceContainer.classList.remove('yawning', 'sleeping');
+                
+                // Toca som de acordar e dispara animação de susto
+                playSound('toggle-on');
+                faceContainer.classList.add('waking-up');
+                setTimeout(() => {
+                    faceContainer.classList.remove('waking-up');
+                }, 400); // 400ms = duração da animação no CSS
+
+                // Restaura o sorriso normal
+                mouth.setAttribute('d', 'M 40 70 Q 50 77 60 70');
+                mouth.setAttribute('fill', 'none');
+            }
+
+            // Ativa o temporizador se estiver na tela de login
+            if (document.getElementById('auth-screen').style.display !== 'none') {
+                idleTimer = setTimeout(triggerYawn, 18000); 
+            }
+        }
+
+        // Passagem 1: Bocejo
+        function triggerYawn() {
+            faceContainer.classList.add('yawning');
+            
+            // Desenho da boca no bocejo
+            mouth.setAttribute('d', 'M 42 63 C 40 82, 60 82, 58 63 C 58 59, 42 59, 42 63 Z');
+            mouth.setAttribute('fill', 'var(--bg-color)');
+
+            setTimeout(() => {
+                if(faceContainer.classList.contains('yawning')) {
+                    triggerSleep();
+                }
+            }, 3500);
+        }
+
+        // Passagem 2: Dormir (com baba)
+        function triggerSleep() {
+            faceContainer.classList.remove('yawning');
+            faceContainer.classList.add('sleeping');
+
+            // Boca relaxada (ligeiramente de lado para a baba cair)
+            mouth.setAttribute('d', 'M 44 70 Q 50 74 56 70');
+            mouth.setAttribute('fill', 'none');
+        }
+
+        // Monitora interações
+        ['mousemove', 'keydown', 'touchstart', 'click', 'input'].forEach(event => {
+            window.addEventListener(event, resetIdleTimer, { passive: true });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Sorteio do Mascote (50% Menino / 50% Menina)
+            const isFemale = Math.random() > 0.5;
+            faceContainer.setAttribute('data-gender', isFemale ? 'female' : 'male');
+
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            const sessaoAtiva = sessionStorage.getItem(CHAVE_SESSAO);
+
+            if (senhaGuardada && sessaoAtiva === 'true') {
+                mostrarMenu();
+            } else {
+                carregarInterface();
+            }
+        });
+
+        function carregarInterface() {
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('menu-screen').style.display = 'none';
+
+            if (senhaGuardada) {
+                document.getElementById('auth-title').innerText = "Bem-vindo de volta!";
+                document.getElementById('auth-subtitle').innerText = "Insira a sua senha para aceder às suas equipas.";
+                document.getElementById('setup-area').style.display = 'none';
+                document.getElementById('login-area').style.display = 'block';
+            } else {
+                document.getElementById('auth-title').innerText = "Olá, Treinador!";
+                document.getElementById('auth-subtitle').innerText = "Por medida de segurança, crie uma senha que usará para entrar novamente.";
+                document.getElementById('setup-area').style.display = 'block';
+                document.getElementById('login-area').style.display = 'none';
+            }
+
+            resetIdleTimer();
+        }
+
+        function criarSenha() {
+            playSound('click');
+            const pass1 = document.getElementById('new-pin').value;
+            const pass2 = document.getElementById('confirm-pin').value;
+
+            if (pass1 === '' || pass2 === '') {
+                Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Por favor, preencha ambos os campos!', confirmButtonColor: '#0066ff' });
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'As senhas não coincidem. Tente novamente!', confirmButtonColor: '#ff2a2a' });
+                return;
+            }
+
+            localStorage.setItem(CHAVE_SENHA, pass1);
+            sessionStorage.setItem(CHAVE_SESSAO, 'true');
+            
+            playSound('success');
+            Swal.fire({ 
+                icon: 'success', title: 'Sucesso!', text: 'A sua senha foi guardada em segurança.', timer: 1500, showConfirmButton: false 
+            }).then(() => { mostrarMenu(); });
+        }
+
+        function fazerLogin() {
+            playSound('click');
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            const inputLogin = document.getElementById('login-pin').value;
+
+            if (inputLogin === senhaGuardada) {
+                playSound('success');
+                sessionStorage.setItem(CHAVE_SESSAO, 'true');
+                mostrarMenu();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Acesso Negado', text: 'A senha está incorreta!', confirmButtonColor: '#ff2a2a' });
+                document.getElementById('login-pin').value = '';
+            }
+        }
+
+        async function resetarSenha() {
+            playSound('click');
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            if(!senhaGuardada) return;
+
+            const { value: currentPass } = await Swal.fire({
+                title: 'Resetar Senha',
+                input: 'password',
+                inputLabel: 'Confirme a sua senha atual para resetar',
+                inputPlaceholder: 'Senha atual...',
+                showCancelButton: true,
+                confirmButtonColor: '#ff2a2a',
+                cancelButtonColor: 'rgba(255,255,255,0.1)',
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (currentPass) {
+                if (currentPass === senhaGuardada) {
+                    localStorage.removeItem(CHAVE_SENHA);
+                    sessionStorage.removeItem(CHAVE_SESSAO);
+                    playSound('delete');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Senha Removida!',
+                        text: 'Pode agora criar uma nova senha.',
+                        confirmButtonColor: '#0066ff'
+                    }).then(() => {
+                        document.getElementById('new-pin').value = '';
+                        document.getElementById('confirm-pin').value = '';
+                        document.getElementById('login-pin').value = '';
+                        carregarInterface();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error', title: 'Erro!', text: 'Senha atual incorreta.', confirmButtonColor: '#ff2a2a'
+                    });
+                }
+            }
+        }
+
+        function mostrarMenu() {
+            clearTimeout(idleTimer);
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
