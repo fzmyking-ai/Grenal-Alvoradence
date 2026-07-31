@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Treinador - Seleção de Equipa</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #08090d;
+            --surface-color: #11131a;
+            --card-bg: #181b26;
+            --blue-glow: #0066ff;
+            --red-glow: #ff2a2a;
+            --pink-glow: #ff007f;
+            --purple-glow: #8A2BE2;
+            --text-main: #ffffff;
+            --text-muted: #8e95a5;
+            --border-radius: 22px;
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0 10px;
+        }
+
+        /* ----- ESTILOS DE AUTENTICAÇÃO E MASCOTE ----- */
+        .face-box {
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        /* Configurações de Género do Mascote (classe partilhada entre o mascote principal e o mini-mascote do menu) */
+        .mascot-colors[data-gender="male"] {
+            --mascot-primary: var(--blue-glow);
+            --mascot-secondary: var(--red-glow);
+        }
+
+        .mascot-colors[data-gender="female"] {
+            --mascot-primary: var(--pink-glow);
+            --mascot-secondary: var(--purple-glow);
+        }
+
+        #ponytail, #eyelashes { display: none; }
+        #face-container[data-gender="female"] #ponytail,
+        #face-container[data-gender="female"] #eyelashes { display: block; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Animação ao acordar (Chaqualada na cabeça) */
+        @keyframes wakeUpShake {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(-10deg) translateX(-5px); }
+            40% { transform: rotate(10deg) translateX(5px); }
+            60% { transform: rotate(-6deg) translateX(-3px); }
+            80% { transform: rotate(6deg) translateX(3px); }
+            100% { transform: rotate(0deg) translateX(0); }
+        }
+
+        .waking-up {
+            animation: wakeUpShake 0.4s ease-out !important;
+        }
+
+        /* Olhada para o lado ao focar nos inputs */
+        #face-elements {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: 50px 50px;
+        }
+
+        .looking-away #face-elements {
+            transform: translateX(12px) translateY(-4px) rotate(8deg);
+        }
+
+        /* Animação de Piscar os Óculos normais */
+        @keyframes blink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            96% { transform: scaleY(0.1); }
+        }
+
+        .glasses-group {
+            transform-origin: 50px 50px;
+            animation: blink 4s infinite;
+            transition: opacity 0.3s ease;
+        }
+
+        .closed-eyes {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Troca os óculos por olhos fechados fofos quando boceja/dorme */
+        .yawning .glasses-group, .sleeping .glasses-group {
+            opacity: 0;
+            animation: none;
+        }
+
+        .yawning .closed-eyes, .sleeping .closed-eyes {
+            opacity: 1;
+        }
+
+        /* Estilo e Animação do zZz ao Dormir */
+        #zzz-group {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .sleeping #zzz-group {
+            opacity: 1;
+        }
+
+        .zzz { opacity: 0; }
+        .sleeping .zzz1 { animation: floatZ 2.4s infinite ease-in-out 0s; }
+        .sleeping .zzz2 { animation: floatZ 2.4s infinite ease-in-out 0.8s; }
+        .sleeping .zzz3 { animation: floatZ 2.4s infinite ease-in-out 1.6s; }
+
+        @keyframes floatZ {
+            0% { opacity: 0; transform: translateY(4px) scale(0.6); }
+            40% { opacity: 1; }
+            80%, 100% { opacity: 0; transform: translateY(-18px) scale(1.1); }
+        }
+
+        /* Animação da Baba */
+        .drool {
+            opacity: 0;
+            transform-origin: 56px 70px;
+            transition: opacity 0.3s;
+        }
+
+        .sleeping .drool {
+            opacity: 0.8;
+            animation: droolPulse 3s infinite ease-in-out;
+        }
+
+        @keyframes droolPulse {
+            0%, 100% { transform: scale(0.6) translateY(0); opacity: 0.6; }
+            50% { transform: scale(1.2) translateY(2px); opacity: 0.9; }
+        }
+
+        #mouth {
+            transition: d 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
+        }
+
+        /* ==========================================================
+           10 ANIMAÇÕES ALEATÓRIAS DE IDLE DO MASCOTE
+           ========================================================== */
+
+        /* 1) Jogar a bola para cima e apanhar de volta */
+        .ball-group { opacity: 0; }
+        #face-container.anim-ball .ball-group {
+            animation: ballToss 1.8s ease-in-out;
+        }
+        @keyframes ballToss {
+            0%   { opacity: 0; transform: translateY(0) scale(1); }
+            8%   { opacity: 1; }
+            45%  { transform: translateY(-58px) scale(0.8); }
+            55%  { transform: translateY(-58px) scale(0.8); }
+            92%  { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(0) scale(1); }
+        }
+        #face-container.anim-ball #face-elements {
+            animation: watchBall 1.8s ease-in-out;
+        }
+        @keyframes watchBall {
+            0%, 100% { transform: translateY(0); }
+            45%, 55% { transform: translateY(-3px); }
+        }
+
+        /* 2) Piscar o olho (wink) */
+        #lens-left { transform-box: fill-box; transform-origin: center; }
+        #face-container.anim-wink #lens-left {
+            animation: winkClose 0.6s ease-in-out;
+        }
+        @keyframes winkClose {
+            0%, 100% { transform: scaleY(1); }
+            50%      { transform: scaleY(0.12); }
+        }
+
+        /* 3) Saltinho feliz */
+        #face-container.anim-bounce > svg {
+            animation: happyBounce 0.9s ease-in-out;
+        }
+        @keyframes happyBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            30%      { transform: translateY(-14px) scale(1.06); }
+            55%      { transform: translateY(0) scale(0.96); }
+            75%      { transform: translateY(-6px) scale(1.02); }
+        }
+
+        /* 4) Abanar a cabeça (não) */
+        #face-container.anim-shake-no > svg {
+            animation: shakeNo 0.8s ease-in-out;
+        }
+        @keyframes shakeNo {
+            0%, 100% { transform: rotate(0deg); }
+            20%      { transform: rotate(-12deg); }
+            40%      { transform: rotate(10deg); }
+            60%      { transform: rotate(-8deg); }
+            80%      { transform: rotate(6deg); }
+        }
+
+        /* 5) Acenar com a cabeça (sim) */
+        #face-container.anim-nod > svg {
+            animation: nodYes 0.9s ease-in-out;
+        }
+        @keyframes nodYes {
+            0%, 100% { transform: translateY(0); }
+            25%      { transform: translateY(7px); }
+            50%      { transform: translateY(0); }
+            75%      { transform: translateY(7px); }
+        }
+
+        /* 6) Olhar curioso à volta */
+        #face-container.anim-look-around #face-elements {
+            animation: lookAround 1.6s ease-in-out;
+        }
+        @keyframes lookAround {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            20%      { transform: translateX(11px) rotate(6deg); }
+            50%      { transform: translateX(-11px) rotate(-6deg); }
+            80%      { transform: translateX(4px) rotate(2deg); }
+        }
+
+        /* 7) Apito de treinador */
+        .whistle-group { opacity: 0; }
+        #face-container.anim-whistle .whistle-group {
+            animation: whistlePop 1s ease-out;
+        }
+        @keyframes whistlePop {
+            0%   { opacity: 0; transform: translateY(5px) scale(0.8); }
+            20%  { opacity: 1; transform: translateY(0) scale(1); }
+            80%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .whistle-note { opacity: 0; }
+        #face-container.anim-whistle .n1 { animation: noteFloat 1s ease-out 0.1s; }
+        #face-container.anim-whistle .n2 { animation: noteFloat 1s ease-out 0.3s; }
+        @keyframes noteFloat {
+            0%   { opacity: 0; transform: translate(0, 0); }
+            30%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(9px, -11px); }
+        }
+
+        /* 8) Giro completo divertido */
+        #face-container.anim-spin > svg {
+            animation: spinFace 1s ease-in-out;
+        }
+        @keyframes spinFace {
+            0%   { transform: rotate(0deg) scale(1); }
+            40%  { transform: rotate(180deg) scale(0.88); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        /* 9) Bochechas coradas (envergonhado/contente) */
+        .blush-group { opacity: 0; }
+        #face-container.anim-blush .blush-group {
+            animation: blushPop 1.5s ease-in-out;
+        }
+        @keyframes blushPop {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            25%, 75% { opacity: 0.75; transform: scale(1); }
+        }
+
+        /* 10) Brilhos de destaque */
+        .sparkle-group { opacity: 0; }
+        #face-container.anim-sparkle .sparkle-group { opacity: 1; }
+        .sparkle { opacity: 0; transform-box: fill-box; transform-origin: center; }
+        #face-container.anim-sparkle .s1 { animation: sparkleTwinkle 1.5s ease-in-out 0s; }
+        #face-container.anim-sparkle .s2 { animation: sparkleTwinkle 1.5s ease-in-out 0.3s; }
+        #face-container.anim-sparkle .s3 { animation: sparkleTwinkle 1.5s ease-in-out 0.6s; }
+        @keyframes sparkleTwinkle {
+            0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+            50%      { opacity: 1; transform: scale(1.2) rotate(90deg); }
+        }
+
+        /* ==========================================================
+           REAÇÕES DO MASCOTE (login errado / certo / conta criada)
+           ========================================================== */
+
+        /* Senha incorreta: cabeça a tombar + lágrima */
+        .tear-group { opacity: 0; }
+        #face-container.anim-sad > svg {
+            animation: sadDroop 1.1s ease-in-out;
+        }
+        @keyframes sadDroop {
+            0%   { transform: rotate(0deg) translateY(0); }
+            30%  { transform: rotate(-4deg) translateY(3px); }
+            60%  { transform: rotate(3deg) translateY(4px); }
+            100% { transform: rotate(0deg) translateY(0); }
+        }
+        #face-container.anim-sad .tear-group {
+            animation: tearFall 1.1s ease-in;
+        }
+        @keyframes tearFall {
+            0%   { opacity: 0; transform: translateY(0); }
+            20%  { opacity: 0.9; }
+            100% { opacity: 0; transform: translateY(14px); }
+        }
+
+        /* Senha correta: saltinho contente */
+        #face-container.anim-happy > svg {
+            animation: happyBounce 0.9s ease-in-out;
+        }
+
+        /* Conta criada: comemoração em grande (saltos + brilhos) */
+        #face-container.anim-party > svg {
+            animation: partyJump 1.4s ease-in-out;
+        }
+        @keyframes partyJump {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+            15%      { transform: translateY(-20px) rotate(-8deg) scale(1.08); }
+            30%      { transform: translateY(0) rotate(6deg) scale(0.95); }
+            45%      { transform: translateY(-16px) rotate(-6deg) scale(1.06); }
+            60%      { transform: translateY(0) rotate(4deg) scale(0.96); }
+            75%      { transform: translateY(-10px) rotate(-3deg) scale(1.03); }
+        }
+        #face-container.anim-party .sparkle-group { opacity: 1; }
+        #face-container.anim-party .s1 { animation: sparkleTwinkle 1.4s ease-in-out 0s; }
+        #face-container.anim-party .s2 { animation: sparkleTwinkle 1.4s ease-in-out 0.25s; }
+        #face-container.anim-party .s3 { animation: sparkleTwinkle 1.4s ease-in-out 0.5s; }
+
+        /* ==========================================================
+           MINI-MASCOTE DO MENU (reage à cor da equipa em hover/toque)
+           ========================================================== */
+        .mini-mascot {
+            width: 64px;
+            margin: 0 auto 16px;
+            transition: transform 0.3s ease;
+        }
+        .mini-mascot.pulse svg {
+            animation: happyBounce 0.55s ease-in-out;
+        }
+
+        /* ==========================================================
+           ÚLTIMA EQUIPA ACEDIDA
+           ========================================================== */
+        .ultima-equipa {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* ==========================================================
+           BOTÃO DE TERMINAR SESSÃO
+           ========================================================== */
+        .logout-btn {
+            margin-top: 28px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 13px 20px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .logout-btn:hover { color: var(--red-glow); border-color: rgba(255, 42, 42, 0.4); }
+        .logout-btn:active { transform: scale(0.96); }
+
+        /* ==========================================================
+           SPLASH SCREEN
+           ========================================================== */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 9999;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .splash-spinner {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.12);
+            border-top-color: var(--blue-glow);
+            animation: splashSpin 0.8s linear infinite;
+        }
+        @keyframes splashSpin { to { transform: rotate(360deg); } }
+        .splash-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==========================================================
+           ALTERNADOR DE TEMA (CLARO / ESCURO)
+           ========================================================== */
+        .theme-toggle {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 500;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface-color);
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, color 0.2s, background 0.3s, border-color 0.3s;
+        }
+        .theme-toggle:hover { color: var(--blue-glow); }
+        .theme-toggle:active { transform: scale(0.9); }
+
+        body.light-mode {
+            --bg-color: #eef1f8;
+            --surface-color: #ffffff;
+            --card-bg: #f1f3f9;
+            --text-main: #14161c;
+            --text-muted: #5b6272;
+        }
+        body.light-mode .header h1 { text-shadow: 0 0 20px rgba(0, 0, 0, 0.06); }
+        body.light-mode .arrow-icon { color: rgba(0, 0, 0, 0.18); }
+        body.light-mode .team-card:hover .arrow-icon { color: var(--text-main); }
+        body.light-mode .team-card,
+        body.light-mode .auth-container { box-shadow: 0 8px 24px rgba(20, 22, 28, 0.1); }
+
+        /* ==========================================================
+           ACESSIBILIDADE: FOCO VISÍVEL
+           ========================================================== */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        [tabindex]:focus-visible {
+            outline: 2px solid var(--blue-glow);
+            outline-offset: 3px;
+        }
+
+        /* Componentes de Interface */
+        .auth-container {
+            background-color: var(--surface-color);
+            padding: 30px 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: cardAppear 0.5s ease-out forwards;
+        }
+
+        .input-glow {
+            width: 100%;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            -webkit-text-security: disk;
+        }
+
+        .input-glow:focus {
+            border-color: var(--blue-glow);
+            box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .btn-glow {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--blue-glow), #0044cc);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .btn-glow:active { transform: scale(0.96); }
+
+        .reset-link {
+            display: inline-block;
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .reset-link:hover { color: var(--red-glow); }
+
+        /* Estilos Seleção Equipa */
+        .selection-grid { display: flex; flex-direction: column; gap: 20px; }
+        .team-card {
+            background: var(--card-bg); border-radius: var(--border-radius); padding: 26px 22px;
+            text-decoration: none; color: var(--text-main); display: flex; align-items: center;
+            justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; text-align: left;
+        }
+        .team-card:active { transform: scale(0.96); }
+        .card-masculino { border-left: 6px solid var(--blue-glow); }
+        .card-masculino:hover { box-shadow: 0 0 25px rgba(0, 102, 255, 0.35); border-color: rgba(0, 102, 255, 0.4); }
+        .card-masculino .icon-box { background: rgba(0, 102, 255, 0.12); color: var(--blue-glow); border: 1px solid rgba(0, 102, 255, 0.25); }
+        
+        .card-feminino { border-left: 6px solid var(--pink-glow); }
+        .card-feminino:hover { box-shadow: 0 0 25px rgba(255, 0, 127, 0.35); border-color: rgba(255, 0, 127, 0.4); }
+        .card-feminino .icon-box { background: rgba(255, 0, 127, 0.12); color: var(--pink-glow); border: 1px solid rgba(255, 0, 127, 0.25); }
+        
+        .info-wrapper { display: flex; align-items: center; gap: 18px; }
+        .icon-box { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; flex-shrink: 0; }
+        .team-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .team-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+        .arrow-icon { font-size: 1.1rem; color: rgba(255, 255, 255, 0.25); transition: transform 0.2s, color 0.2s; }
+        .team-card:hover .arrow-icon { transform: translateX(4px); color: var(--text-main); }
+        
+        footer { margin-top: 50px; font-size: 0.85rem; color: var(--text-muted); opacity: 0.5; font-weight: 600;}
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Estilo Customizado para SweetAlert */
+        .swal2-popup { background: var(--surface-color) !important; color: #fff !important; border-radius: 20px !important; border: 1px solid rgba(255,255,255,0.1) !important;}
+        .swal2-title { color: #fff !important; }
+        .swal2-input { background: var(--card-bg) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px !important; }
+        .swal2-input:focus { border-color: var(--blue-glow) !important; box-shadow: 0 0 10px rgba(0,102,255,0.3) !important; }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen" aria-hidden="true">
+        <div class="splash-spinner"></div>
+        <p class="splash-text">A carregar...</p>
+    </div>
+
+    <button id="theme-toggle" class="theme-toggle" onclick="alternarTema()" aria-label="Alternar entre tema claro e escuro">
+        <i class="fas fa-sun" aria-hidden="true"></i>
+    </button>
+
+    <div class="container">
+        
+        <div id="auth-screen" class="auth-container" style="display: none;">
+            <div class="face-box mascot-colors" id="face-container" data-gender="male" aria-hidden="true">
+                <svg width="140" height="140" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path id="ponytail" d="M 15 45 Q -10 65 5 90 Q 20 70 25 50 Z" fill="#3a2115" opacity="0.95"/>
+                    
+                    <circle cx="50" cy="56" r="36" fill="#181b26" stroke="#ffffff" stroke-width="2" opacity="0.3" />
+                    
+                    <path d="M 14 40 C 14 -5, 86 -5, 86 40 Z" fill="var(--mascot-primary)" />
+
+                    <g id="face-elements">
+                        <path d="M 5 40 L 80 40" stroke="var(--mascot-secondary)" stroke-width="6" stroke-linecap="round" />
+                        <circle cx="50" cy="12" r="3.5" fill="var(--mascot-secondary)" />
+
+                        <g class="glasses-group">
+                            <rect id="lens-left" x="23" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                            <rect id="lens-right" x="54" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                            <path d="M 45 48 L 55 48" stroke="#ffffff" stroke-width="3.5" />
+                            
+                            <g id="eyelashes">
+                                <path d="M 25 44 L 20 38" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 35 44 L 33 36" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 65 44 L 67 36" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                                <path d="M 75 44 L 80 38" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+                            </g>
+
+                            <path d="M 26 46 L 42 55" stroke="var(--mascot-primary)" stroke-width="2.5" opacity="0.85" />
+                            <path d="M 57 46 L 73 55" stroke="var(--mascot-primary)" stroke-width="2.5" opacity="0.85" />
+                        </g>
+
+                        <g class="closed-eyes">
+                            <path d="M 26 50 Q 34 56 42 50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+                            <path d="M 58 50 Q 66 56 74 50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+                        </g>
+
+                        <path id="mouth" d="M 40 70 Q 50 77 60 70" stroke="var(--text-muted)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+                        <path class="drool" d="M 54 71 C 58 71, 60 80, 56 84 C 52 80, 52 71, 54 71 Z" fill="#cce5ff" />
+
+                        <g id="zzz-group">
+                            <text class="zzz zzz1" x="66" y="38" fill="var(--text-muted)" font-size="11" font-weight="800">z</text>
+                            <text class="zzz zzz2" x="74" y="27" fill="var(--text-muted)" font-size="14" font-weight="800">Z</text>
+                            <text class="zzz zzz3" x="84" y="14" fill="var(--text-muted)" font-size="17" font-weight="800">Z</text>
+                        </g>
+                    </g>
+
+                    <!-- Bola para a animação de jogar/apanhar -->
+                    <g id="ball-group" class="ball-group">
+                        <circle cx="50" cy="6" r="8" fill="#ffffff" stroke="#181b26" stroke-width="1.5"/>
+                        <path d="M 50 -1 L 50 13 M 43 6 L 57 6 M 45.2 0.2 L 54.8 11.8 M 54.8 0.2 L 45.2 11.8" stroke="#181b26" stroke-width="1" opacity="0.5"/>
+                    </g>
+
+                    <!-- Bochechas coradas -->
+                    <g id="blush-group" class="blush-group">
+                        <ellipse cx="23" cy="63" rx="6" ry="3.5" fill="var(--mascot-secondary)" opacity="0.6"/>
+                        <ellipse cx="77" cy="63" rx="6" ry="3.5" fill="var(--mascot-secondary)" opacity="0.6"/>
+                    </g>
+
+                    <!-- Lágrima (reação a senha incorreta) -->
+                    <g id="tear-group" class="tear-group">
+                        <path d="M 34 60 C 34 60, 30 68, 34 71 C 38 68, 34 60, 34 60 Z" fill="#7ec8ff"/>
+                    </g>
+
+                    <!-- Brilhos de destaque -->
+                    <g id="sparkle-group" class="sparkle-group">
+                        <text class="sparkle s1" x="6" y="24" fill="#ffffff" font-size="14" font-weight="800">✦</text>
+                        <text class="sparkle s2" x="90" y="34" fill="#ffffff" font-size="10" font-weight="800">✦</text>
+                        <text class="sparkle s3" x="84" y="94" fill="#ffffff" font-size="12" font-weight="800">✦</text>
+                    </g>
+
+                    <!-- Apito de treinador -->
+                    <g id="whistle-group" class="whistle-group">
+                        <path d="M 50 78 L 50 87" stroke="#c8ccd6" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="50" cy="89" r="4" fill="#c8ccd6" stroke="#888e9c" stroke-width="1"/>
+                        <path class="whistle-note n1" d="M 58 80 Q 63 75 68 80" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                        <path class="whistle-note n2" d="M 60 85 Q 66 78 72 85" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="header" style="margin-bottom: 25px;">
+                <h1 id="auth-title">Olá, Treinador!</h1>
+                <p id="auth-subtitle">Por medida de segurança, crie uma senha que usará para entrar novamente.</p>
+            </div>
+
+            <div id="setup-area">
+                <input type="text" id="new-pin" placeholder="Digite uma senha" class="input-glow pass-input" autocomplete="off" spellcheck="false" aria-label="Nova senha">
+                <input type="text" id="confirm-pin" placeholder="Confirme a senha" class="input-glow pass-input" autocomplete="off" spellcheck="false" aria-label="Confirmar nova senha">
+                <button class="btn-glow" onclick="criarSenha()" aria-label="Guardar senha"><i class="fas fa-lock" aria-hidden="true"></i> Guardar Senha</button>
+            </div>
+
+            <div id="login-area" style="display: none;">
+                <input type="text" id="login-pin" placeholder="A sua senha secreta" class="input-glow pass-input" autocomplete="off" spellcheck="false" aria-label="Senha de acesso">
+                <button class="btn-glow" onclick="fazerLogin()" aria-label="Entrar na aplicação"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Entrar na App</button>
+                <div class="reset-link" onclick="resetarSenha()" role="button" tabindex="0" aria-label="Resetar senha" onkeydown="if(event.key==='Enter'){resetarSenha();}"><i class="fas fa-undo" aria-hidden="true"></i> Resetar Senha</div>
+            </div>
+        </div>
+
+        <div id="menu-screen" style="display: none; animation: cardAppear 0.5s ease-out forwards;">
+            <div class="mini-mascot mascot-colors" id="menu-mascot" data-gender="male" aria-hidden="true">
+                <svg width="64" height="64" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="56" r="36" fill="#181b26" stroke="#ffffff" stroke-width="2" opacity="0.3" />
+                    <path d="M 14 40 C 14 -5, 86 -5, 86 40 Z" fill="var(--mascot-primary)" />
+                    <path d="M 5 40 L 80 40" stroke="var(--mascot-secondary)" stroke-width="6" stroke-linecap="round" />
+                    <rect x="23" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                    <rect x="54" y="44" width="23" height="13" rx="4" fill="#ffffff" opacity="0.95"/>
+                    <path d="M 45 48 L 55 48" stroke="#ffffff" stroke-width="3.5" />
+                    <path d="M 40 70 Q 50 77 60 70" stroke="#8e95a5" stroke-width="3.5" stroke-linecap="round" fill="none" />
+                </svg>
+            </div>
+
+            <div class="header">
+                <h1>App Treinador</h1>
+                <p>Selecione a equipa para gerir os treinos</p>
+                <p id="ultima-equipa-badge" class="ultima-equipa" style="display:none;"></p>
+            </div>
+
+            <div class="selection-grid">
+                <a href="masculino.html" class="team-card card-masculino" aria-label="Equipa Masculina - Atletas, chamadas e sorteios">
+                    <div class="info-wrapper">
+                        <div class="icon-box"><i class="fas fa-mars" aria-hidden="true"></i></div>
+                        <div>
+                            <div class="team-title">Equipa Masculina</div>
+                            <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right arrow-icon" aria-hidden="true"></i>
+                </a>
+
+                <a href="feminino.html" class="team-card card-feminino" aria-label="Equipa Feminina - Atletas, chamadas e sorteios">
+                    <div class="info-wrapper">
+                        <div class="icon-box"><i class="fas fa-venus" aria-hidden="true"></i></div>
+                        <div>
+                            <div class="team-title">Equipa Feminina</div>
+                            <div class="team-subtitle">Atletas, chamadas e sorteios</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right arrow-icon" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <button class="logout-btn" onclick="fazerLogout()" aria-label="Terminar sessão"><i class="fas fa-right-from-bracket" aria-hidden="true"></i> Terminar Sessão</button>
+        </div>
+
+        <footer>
+            Gestão Desportiva
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================================
+        // MOTOR DE SOM (Partilhado)
+        // ==========================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        document.body.addEventListener('click', () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            if (type === 'click') {
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(800, now); 
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); 
+                osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(523.25, now); 
+                osc.frequency.setValueAtTime(659.25, now + 0.1); 
+                gain.gain.setValueAtTime(0, now); 
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.05); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); 
+                osc.stop(now + 0.3);
+            } else if (type === 'delete') {
+                osc.type = 'sawtooth'; 
+                osc.frequency.setValueAtTime(150, now); 
+                osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); 
+                osc.stop(now + 0.2);
+            } else if (type === 'whistle') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(2600, now);
+                osc.frequency.setValueAtTime(3000, now + 0.15);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'toggle-on') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+            
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+
+            vibrarPeloSom(type);
+        }
+
+        // --- FEEDBACK HÁPTICO (VIBRAÇÃO EM MOBILE) ---
+        function vibrar(padrao) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(padrao); } catch (e) { /* dispositivo sem suporte */ }
+            }
+        }
+
+        function vibrarPeloSom(type) {
+            const padroes = {
+                click: 12,
+                success: [15, 30, 15],
+                delete: 25,
+                whistle: 15,
+                error: [40, 50, 40],
+                'toggle-on': 10
+            };
+            vibrar(padroes[type] || 10);
+        }
+
+        // ==========================================================
+        // LÓGICA PRINCIPAL DA APP
+        // ==========================================================
+        const CHAVE_SENHA = 'app_treinador_senha_secreta';
+        const CHAVE_SESSAO = 'app_treinador_sessao_ativa';
+        const faceContainer = document.getElementById('face-container');
+        const passInputs = document.querySelectorAll('.pass-input');
+        const mouth = document.getElementById('mouth');
+
+        let idleTimer = null;
+
+        // Olhar para o lado e som ao focar nos inputs
+        passInputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                playSound('click');
+                faceContainer.classList.add('looking-away');
+            });
+            input.addEventListener('blur', () => {
+                faceContainer.classList.remove('looking-away');
+            });
+        });
+
+        // --- LÓGICA DE INATIVIDADE (BOCEJO -> DORMIR -> ACORDAR) ---
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+
+            // Verifica se ele estava a dormir ou a bocejar
+            if (faceContainer.classList.contains('yawning') || faceContainer.classList.contains('sleeping')) {
+                // Remove os estados de sono
+                faceContainer.classList.remove('yawning', 'sleeping');
+                
+                // Toca som de acordar e dispara animação de susto
+                playSound('toggle-on');
+                faceContainer.classList.add('waking-up');
+                setTimeout(() => {
+                    faceContainer.classList.remove('waking-up');
+                }, 400); // 400ms = duração da animação no CSS
+
+                // Restaura o sorriso normal
+                mouth.setAttribute('d', 'M 40 70 Q 50 77 60 70');
+                mouth.setAttribute('fill', 'none');
+            }
+
+            // Ativa o temporizador se estiver na tela de login
+            if (document.getElementById('auth-screen').style.display !== 'none') {
+                idleTimer = setTimeout(triggerYawn, 18000); 
+            }
+        }
+
+        // Passagem 1: Bocejo
+        function triggerYawn() {
+            faceContainer.classList.add('yawning');
+            
+            // Desenho da boca no bocejo
+            mouth.setAttribute('d', 'M 42 63 C 40 82, 60 82, 58 63 C 58 59, 42 59, 42 63 Z');
+            mouth.setAttribute('fill', 'var(--bg-color)');
+
+            setTimeout(() => {
+                if(faceContainer.classList.contains('yawning')) {
+                    triggerSleep();
+                }
+            }, 3500);
+        }
+
+        // Passagem 2: Dormir (com baba)
+        function triggerSleep() {
+            faceContainer.classList.remove('yawning');
+            faceContainer.classList.add('sleeping');
+
+            // Boca relaxada (ligeiramente de lado para a baba cair)
+            mouth.setAttribute('d', 'M 44 70 Q 50 74 56 70');
+            mouth.setAttribute('fill', 'none');
+        }
+
+        // Monitora interações
+        ['mousemove', 'keydown', 'touchstart', 'click', 'input'].forEach(event => {
+            window.addEventListener(event, resetIdleTimer, { passive: true });
+        });
+
+        // --- ANIMAÇÕES ALEATÓRIAS DO MASCOTE (10 variações) ---
+        const randomAnimations = [
+            'anim-ball', 'anim-wink', 'anim-bounce', 'anim-shake-no', 'anim-nod',
+            'anim-look-around', 'anim-whistle', 'anim-spin', 'anim-blush', 'anim-sparkle'
+        ];
+        const animDurations = {
+            'anim-ball': 1800, 'anim-wink': 600, 'anim-bounce': 900, 'anim-shake-no': 800,
+            'anim-nod': 900, 'anim-look-around': 1600, 'anim-whistle': 1000, 'anim-spin': 1000,
+            'anim-blush': 1500, 'anim-sparkle': 1500
+        };
+        let randomAnimInterval = null;
+
+        function triggerRandomAnimation() {
+            if (!faceContainer) return;
+            // Não interrompe bocejo, sono, o susto de acordar nem quando está a olhar para o input
+            if (faceContainer.classList.contains('yawning') ||
+                faceContainer.classList.contains('sleeping') ||
+                faceContainer.classList.contains('waking-up') ||
+                faceContainer.classList.contains('looking-away')) return;
+            if (faceContainer.dataset.animating === 'true') return;
+
+            const anim = randomAnimations[Math.floor(Math.random() * randomAnimations.length)];
+            faceContainer.dataset.animating = 'true';
+            faceContainer.classList.add(anim);
+
+            if (anim === 'anim-whistle') playSound('whistle');
+
+            setTimeout(() => {
+                faceContainer.classList.remove(anim);
+                faceContainer.dataset.animating = 'false';
+            }, animDurations[anim] || 1000);
+        }
+
+        function startRandomAnimations() {
+            clearInterval(randomAnimInterval);
+            randomAnimInterval = setInterval(triggerRandomAnimation, 4500);
+        }
+
+        function stopRandomAnimations() {
+            clearInterval(randomAnimInterval);
+        }
+
+        // --- REAÇÕES DIRIGIDAS DO MASCOTE (senha errada / certa / conta criada) ---
+        function mascotReact(animClass, duration) {
+            if (!faceContainer) return;
+            faceContainer.classList.remove(
+                'anim-ball', 'anim-wink', 'anim-bounce', 'anim-shake-no', 'anim-nod',
+                'anim-look-around', 'anim-whistle', 'anim-spin', 'anim-blush', 'anim-sparkle',
+                'anim-sad', 'anim-happy', 'anim-party'
+            );
+            void faceContainer.offsetWidth; // força reflow para reiniciar a animação
+            faceContainer.classList.add(animClass);
+            faceContainer.dataset.animating = 'true';
+            setTimeout(() => {
+                faceContainer.classList.remove(animClass);
+                faceContainer.dataset.animating = 'false';
+            }, duration);
+        }
+
+        function dispararConfetes() {
+            if (typeof confetti !== 'function') return;
+            confetti({
+                particleCount: 90,
+                spread: 70,
+                startVelocity: 35,
+                zIndex: 99999,
+                colors: ['#0066ff', '#ff2a2a', '#ff007f', '#8A2BE2', '#ffffff'],
+                origin: { y: 0.35 }
+            });
+        }
+
+        // --- ALTERNADOR DE TEMA CLARO / ESCURO ---
+        const CHAVE_TEMA = 'app_treinador_tema';
+
+        function aplicarTema(tema) {
+            const icon = document.querySelector('#theme-toggle i');
+            if (tema === 'light') {
+                document.body.classList.add('light-mode');
+                if (icon) { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+            } else {
+                document.body.classList.remove('light-mode');
+                if (icon) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+            }
+        }
+
+        function alternarTema() {
+            playSound('toggle-on');
+            const atual = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+            const novo = atual === 'light' ? 'dark' : 'light';
+            localStorage.setItem(CHAVE_TEMA, novo);
+            aplicarTema(novo);
+        }
+
+        aplicarTema(localStorage.getItem(CHAVE_TEMA) || 'dark');
+
+        const menuMascot = document.getElementById('menu-mascot');
+        let generoOriginal = 'male';
+
+        function definirGeneroMiniMascote(genero) {
+            if (!menuMascot) return;
+            menuMascot.setAttribute('data-gender', genero);
+            menuMascot.classList.remove('pulse');
+            void menuMascot.offsetWidth;
+            menuMascot.classList.add('pulse');
+        }
+
+        document.querySelectorAll('.card-masculino').forEach(card => {
+            card.addEventListener('mouseenter', () => definirGeneroMiniMascote('male'));
+            card.addEventListener('touchstart', () => definirGeneroMiniMascote('male'), { passive: true });
+            card.addEventListener('mouseleave', () => definirGeneroMiniMascote(generoOriginal));
+        });
+        document.querySelectorAll('.card-feminino').forEach(card => {
+            card.addEventListener('mouseenter', () => definirGeneroMiniMascote('female'));
+            card.addEventListener('touchstart', () => definirGeneroMiniMascote('female'), { passive: true });
+            card.addEventListener('mouseleave', () => definirGeneroMiniMascote(generoOriginal));
+        });
+
+        // Guarda a última equipa acedida e toca som/vibração ao selecionar
+        document.querySelectorAll('.team-card').forEach(card => {
+            card.addEventListener('click', () => {
+                playSound('click');
+                const equipa = card.classList.contains('card-masculino') ? 'Masculina' : 'Feminina';
+                localStorage.setItem('app_treinador_ultima_equipa', equipa);
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Sorteio do Mascote (50% Menino / 50% Menina)
+            const isFemale = Math.random() > 0.5;
+            generoOriginal = isFemale ? 'female' : 'male';
+            faceContainer.setAttribute('data-gender', generoOriginal);
+            if (menuMascot) menuMascot.setAttribute('data-gender', generoOriginal);
+
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            const sessaoAtiva = sessionStorage.getItem(CHAVE_SESSAO);
+
+            if (senhaGuardada && sessaoAtiva === 'true') {
+                mostrarMenu();
+            } else {
+                carregarInterface();
+            }
+
+            // Esconde o splash screen assim que o ecrã correto estiver pronto
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if (splash) splash.classList.add('hidden');
+            }, 500);
+        });
+
+        function carregarInterface() {
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('menu-screen').style.display = 'none';
+
+            if (senhaGuardada) {
+                document.getElementById('auth-title').innerText = "Bem-vindo de volta!";
+                document.getElementById('auth-subtitle').innerText = "Insira a sua senha para aceder às suas equipas.";
+                document.getElementById('setup-area').style.display = 'none';
+                document.getElementById('login-area').style.display = 'block';
+            } else {
+                document.getElementById('auth-title').innerText = "Olá, Treinador!";
+                document.getElementById('auth-subtitle').innerText = "Por medida de segurança, crie uma senha que usará para entrar novamente.";
+                document.getElementById('setup-area').style.display = 'block';
+                document.getElementById('login-area').style.display = 'none';
+            }
+
+            resetIdleTimer();
+            startRandomAnimations();
+        }
+
+        function criarSenha() {
+            playSound('click');
+            const pass1 = document.getElementById('new-pin').value;
+            const pass2 = document.getElementById('confirm-pin').value;
+
+            if (pass1 === '' || pass2 === '') {
+                Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Por favor, preencha ambos os campos!', confirmButtonColor: '#0066ff' });
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'As senhas não coincidem. Tente novamente!', confirmButtonColor: '#ff2a2a' });
+                return;
+            }
+
+            localStorage.setItem(CHAVE_SENHA, pass1);
+            sessionStorage.setItem(CHAVE_SESSAO, 'true');
+            
+            playSound('success');
+            mascotReact('anim-party', 1400);
+            dispararConfetes();
+            Swal.fire({ 
+                icon: 'success', title: 'Sucesso!', text: 'A sua senha foi guardada em segurança.', timer: 1500, showConfirmButton: false 
+            }).then(() => { mostrarMenu(); });
+        }
+
+        function fazerLogin() {
+            playSound('click');
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            const inputLogin = document.getElementById('login-pin').value;
+
+            if (inputLogin === senhaGuardada) {
+                playSound('success');
+                mascotReact('anim-happy', 900);
+                sessionStorage.setItem(CHAVE_SESSAO, 'true');
+                mostrarMenu();
+            } else {
+                playSound('error');
+                mouth.setAttribute('d', 'M 40 74 Q 50 66 60 74');
+                mouth.setAttribute('fill', 'none');
+                mascotReact('anim-sad', 1100);
+                setTimeout(() => {
+                    mouth.setAttribute('d', 'M 40 70 Q 50 77 60 70');
+                }, 1100);
+                Swal.fire({ icon: 'error', title: 'Acesso Negado', text: 'A senha está incorreta!', confirmButtonColor: '#ff2a2a' });
+                document.getElementById('login-pin').value = '';
+            }
+        }
+
+        async function resetarSenha() {
+            playSound('click');
+            const senhaGuardada = localStorage.getItem(CHAVE_SENHA);
+            if(!senhaGuardada) return;
+
+            const { value: currentPass } = await Swal.fire({
+                title: 'Resetar Senha',
+                input: 'password',
+                inputLabel: 'Confirme a sua senha atual para resetar',
+                inputPlaceholder: 'Senha atual...',
+                showCancelButton: true,
+                confirmButtonColor: '#ff2a2a',
+                cancelButtonColor: 'rgba(255,255,255,0.1)',
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (currentPass) {
+                if (currentPass === senhaGuardada) {
+                    localStorage.removeItem(CHAVE_SENHA);
+                    sessionStorage.removeItem(CHAVE_SESSAO);
+                    playSound('delete');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Senha Removida!',
+                        text: 'Pode agora criar uma nova senha.',
+                        confirmButtonColor: '#0066ff'
+                    }).then(() => {
+                        document.getElementById('new-pin').value = '';
+                        document.getElementById('confirm-pin').value = '';
+                        document.getElementById('login-pin').value = '';
+                        carregarInterface();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error', title: 'Erro!', text: 'Senha atual incorreta.', confirmButtonColor: '#ff2a2a'
+                    });
+                }
+            }
+        }
+
+        function mostrarMenu() {
+            clearTimeout(idleTimer);
+            stopRandomAnimations();
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'block';
+
+            const ultimaEquipa = localStorage.getItem('app_treinador_ultima_equipa');
+            const badge = document.getElementById('ultima-equipa-badge');
+            if (badge) {
+                if (ultimaEquipa) {
+                    badge.textContent = `Última equipa: ${ultimaEquipa}`;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function fazerLogout() {
+            playSound('click');
+            sessionStorage.removeItem(CHAVE_SESSAO);
+            carregarInterface();
+        }
+    </script>
+</body>
+</html>
+
